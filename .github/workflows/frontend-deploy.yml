@@ -35,7 +35,7 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build \
-            -t $ECR_REPO:latest .
+            -t $ECR_REPO:latest ./frontend
 
       - name: Tag Docker Image
         run: |
