@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -13,6 +14,7 @@ export class BackendStack extends cdk.Stack {
     id: string,
     vpc: ec2.Vpc,
     sg: ec2.SecurityGroup,
+    role: iam.Role,
     props?: cdk.StackProps
   ) {
 
@@ -28,6 +30,7 @@ export class BackendStack extends cdk.Stack {
       'BackendAsg',
       {
         vpc,
+        role:role,
 
         instanceType:
           new ec2.InstanceType('t3.micro'),
@@ -43,6 +46,7 @@ export class BackendStack extends cdk.Stack {
         userData:
           ec2.UserData.custom(script),
 
+        
         vpcSubnets:{
           subnetType:
             ec2.SubnetType.PRIVATE_WITH_EGRESS

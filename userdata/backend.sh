@@ -1,19 +1,23 @@
 #!/bin/bash
 
-yum update -y
+dnf update -y
 
-curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+dnf install -y docker
 
-yum install -y nodejs
+systemctl enable docker
+systemctl start docker
 
-cat > /home/ec2-user/server.js <<'EOF'
-const http = require('http');
+aws ecr get-login-password \
+ --region us-east-1 \
+ | docker login \
+ --username AWS \
+ --password-stdin \
+ 487916111349.dkr.ecr.us-east-1.amazonaws.com
 
-http.createServer((req,res)=>{
- res.writeHead(200);
- res.end('Backend API Running');
-}).listen(3000);
-EOF
+docker pull \
+487916111349.dkr.ecr.us-east-1.amazonaws.com/aws-cdk-backend:latest
 
-nohup node /home/ec2-user/server.js \
- > /var/log/backend.log 2>&1 &
+docker run -d \
+--name backend \
+-p 3000:3000 \
+487916111349.dkr.ecr.us-east-1.amazonaws.com/aws-cdk-backend:latest

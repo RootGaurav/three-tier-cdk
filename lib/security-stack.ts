@@ -6,6 +6,7 @@ export class SecurityStack extends cdk.Stack {
 
   public readonly albSg: ec2.SecurityGroup;
   public readonly frontendSg: ec2.SecurityGroup;
+  public readonly internalAlbSg: ec2.SecurityGroup;
   public readonly backendSg: ec2.SecurityGroup;
   public readonly rdsSg: ec2.SecurityGroup;
 
@@ -30,6 +31,12 @@ export class SecurityStack extends cdk.Stack {
       { vpc }
     );
 
+    this.internalAlbSg = new ec2.SecurityGroup(
+      this,
+      'InternalAlbSg',
+      { vpc }
+    );
+
     this.backendSg = new ec2.SecurityGroup(
       this,
       'BackendSg',
@@ -42,24 +49,39 @@ export class SecurityStack extends cdk.Stack {
       { vpc }
     );
 
+    // Internet -> Public ALB
     this.albSg.addIngressRule(
       ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(80)
+      ec2.Port.tcp(80),
+      'Allow HTTP from Internet'
     );
 
+    // Public ALB -> Frontend
     this.frontendSg.addIngressRule(
       this.albSg,
-      ec2.Port.tcp(80)
+      ec2.Port.tcp(80),
+      'Allow traffic from Public ALB'
     );
 
-    this.backendSg.addIngressRule(
+    // Frontend -> Internal ALB
+    this.internalAlbSg.addIngressRule(
       this.frontendSg,
-      ec2.Port.tcp(3000)
+      ec2.Port.tcp(80),
+      'Allow traffic from Frontend'
     );
 
+    // Internal ALB -> Backend
+    this.backendSg.addIngressRule(
+      this.internalAlbSg,
+      ec2.Port.tcp(3000),
+      'Allow traffic from Internal ALB'
+    );
+
+    // Backend -> MySQL
     this.rdsSg.addIngressRule(
       this.backendSg,
-      ec2.Port.tcp(3306)
+      ec2.Port.tcp(3306),
+      'Allow MySQL from Backend'
     );
   }
 }

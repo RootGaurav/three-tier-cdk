@@ -1,0 +1,63 @@
+name: Frontend Deploy
+
+on:
+  push:
+    branches:
+      - frontend
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPO: aws-cdk-frontend
+      ASG_NAME: frontend-asg
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t $ECR_REPO:latest .
+
+      - name: Tag Docker Image
+        run: |
+          docker tag \
+          $ECR_REPO:latest \
+          487916111349.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:latest
+
+      - name: Push Docker Image
+        run: |
+          docker push \
+          487916111349.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:latest
+
+      - name: Start Instance Refresh
+        run: |
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name $ASG_NAME
+
+      - name: Wait For Refresh
+        run: |
+          sleep 60
+
+      - name: Show Refresh Status
+        run: |
+          aws autoscaling describe-instance-refreshes \
+            --auto-scaling-group-name $ASG_NAME

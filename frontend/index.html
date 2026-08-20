@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo App</title>
+</head>
+<body>
+
+<h1>Todo App</h1>
+
+<ul id="todos"></ul>
+
+<script>
+
+fetch('/api/todos')
+.then(response => response.json())
+.then(data => {
+
+    const ul = document.getElementById('todos');
+
+    data.forEach(todo => {
+
+        const li = document.createElement('li');
+
+        li.innerText = todo.title;
+
+        ul.appendChild(li);
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

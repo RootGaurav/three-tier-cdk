@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export class FrontendStack extends cdk.Stack {
@@ -13,35 +14,45 @@ export class FrontendStack extends cdk.Stack {
     id: string,
     vpc: ec2.Vpc,
     sg: ec2.SecurityGroup,
-    props?: cdk.StackProps
+    role: iam.Role,
+    internalAlbDnsName: string,
+    props?: cdk.StackProps,
   ) {
 
-    super(scope,id,props);
+    super(scope, id, props);
 
-    const userData = fs.readFileSync(
-      'userdata/frontend.sh',
-      'utf8'
-    );
+    let userData =
+      fs.readFileSync(
+        'userdata/frontend.sh',
+        'utf8'
+      );
+
+    userData =
+      userData.replace(
+        'INTERNAL_ALB_DNS',
+        internalAlbDnsName
+      );
 
     this.asg = new autoscaling.AutoScalingGroup(
       this,
       'FrontendAsg',
       {
         vpc,
-        instanceType:new ec2.InstanceType('t3.micro'),
+        role: role,
+        instanceType: new ec2.InstanceType('t3.micro'),
         machineImage:
-          ec2.MachineImage.latestAmazonLinux2(),
+          ec2.MachineImage.latestAmazonLinux2023(),
 
-        minCapacity:2,
-        desiredCapacity:2,
-        maxCapacity:4,
+        minCapacity: 2,
+        desiredCapacity: 2,
+        maxCapacity: 4,
 
-        securityGroup:sg,
+        securityGroup: sg,
 
         userData:
           ec2.UserData.custom(userData),
 
-        vpcSubnets:{
+        vpcSubnets: {
           subnetType:
             ec2.SubnetType.PRIVATE_WITH_EGRESS
         }

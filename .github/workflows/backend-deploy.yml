@@ -1,0 +1,51 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches:
+      - backend
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPO: aws-cdk-backend
+      ASG_NAME: backend-asg
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Backend Image
+        run: |
+          docker build \
+          -t $ECR_REPO:latest .
+
+      - name: Tag Backend Image
+        run: |
+          docker tag \
+          $ECR_REPO:latest \
+          487916111349.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:latest
+
+      - name: Push Backend Image
+        run: |
+          docker push \
+          487916111349.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:latest
+
+      - name: Refresh Backend ASG
+        run: |
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name $ASG_NAME
