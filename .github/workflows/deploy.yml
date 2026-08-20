@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 23
 
       - name: Install Dependencies
         run: npm ci
@@ -39,6 +39,9 @@ jobs:
 
       - name: CDK Synth
         run: npx cdk synth
+      
+      - name: CDK Diff
+        run: npx cdk diff
 
       - name: CDK Deploy
         run: npx cdk deploy --all --require-approval never
