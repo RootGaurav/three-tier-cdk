@@ -37,6 +37,7 @@ export class FrontendStack extends cdk.Stack {
       this,
       'FrontendAsg',
       {
+        autoScalingGroupName: 'frontend-asg',
         vpc,
         role: role,
         instanceType: new ec2.InstanceType('t3.micro'),

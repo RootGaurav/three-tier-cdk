@@ -29,6 +29,7 @@ export class BackendStack extends cdk.Stack {
       this,
       'BackendAsg',
       {
+        autoScalingGroupName: 'backend-asg',
         vpc,
         role:role,
 
