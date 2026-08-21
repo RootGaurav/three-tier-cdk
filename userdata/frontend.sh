@@ -16,7 +16,8 @@ aws ecr get-login-password \
 
 docker pull \
 487916111349.dkr.ecr.us-east-1.amazonaws.com/aws-cdk-frontend:latest
- 
+
+
 docker run -d \
 --name frontend \
 -p 80:80 \
